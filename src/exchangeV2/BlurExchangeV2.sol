@@ -308,7 +308,6 @@ contract BlurExchangeV2 is
         }
 
         _emitExecutionEvent(executionBatch, order, listing.index, totalPrice, fees, OrderType.ASK);
-
         /* Return dust. */
         _transferETH(msg.sender, address(this).balance);
     }
