@@ -32,7 +32,8 @@ abstract contract Signatures is ISignatures {
     }
 
     /**
-     * @notice Verify the domain separator produced during deployment of the implementation matches that of the proxy
+     * @notice Verify the domain separator produced during deployment of the implementation matches that of the proxy 
+     * // 校验域分隔符
      */
     function verifyDomain() public view {
         bytes32 eip712DomainTypehash = keccak256(
@@ -283,7 +284,9 @@ abstract contract Signatures is ISignatures {
         uint32 blockNumber;
         address oracle;
         assembly {
+            // signatureOffset 是 oracleSignature 的偏移量
             let signatureOffset := oracleSignature.offset
+            // 读取 r, s, v, blockNumber, oracle 
             r := calldataload(signatureOffset)
             s := calldataload(add(signatureOffset, OracleSignatures_s_offset))
             v := shr(Bytes1_shift, calldataload(add(signatureOffset, OracleSignatures_v_offset)))
@@ -296,12 +299,15 @@ abstract contract Signatures is ISignatures {
                 calldataload(add(signatureOffset, OracleSignatures_oracle_offset))
             )
         }
+        // 检查签名是否在有效期
         if (blockNumber + blockRange < block.number) {
             revert ExpiredOracleSignature();
         }
+        // 检查签名的oracle是否存在
         if (oracles[oracle] == 0) {
             revert UnauthorizedOracle();
         }
+        // 检查签名是否有效
         if (!_verify(oracle, keccak256(abi.encodePacked(hash, blockNumber)), v, r, s)) {
             revert InvalidOracleSignature();
         }

@@ -83,14 +83,14 @@ abstract contract Validation is IValidation, Signatures {
         /* After hashing, the salt is no longer needed so we can store the order hash here. */
         order.salt = uint256(orderHash);
 
-        return _verifyAuthorization(
+        return _verifyAuthorization( // 校验签名
             order.trader,
             orderHash,
             signatures,
             signatureIndex
         ) &&
-            _checkLiveness(order) &&
-            _checkFee(order.makerFee, fees);
+            _checkLiveness(order) && // 校验订单是否过期
+            _checkFee(order.makerFee, fees); // 校验手续费总和不超过 _BASIS_POINTS 10000
     }
 
     /**
@@ -127,7 +127,7 @@ abstract contract Validation is IValidation, Signatures {
     }
 
     /**
-     * @notice Validate a listing and its proposed exchange
+     * @notice Validate a listing and its proposed exchange // 校验挂单和所涉及的交易
      * @param order Order of the listing
      * @param orderType Order type
      * @param exchange Exchange containing the listing
@@ -139,15 +139,17 @@ abstract contract Validation is IValidation, Signatures {
         Exchange memory exchange
     ) private pure returns (bool validListing) {
         Listing memory listing = exchange.listing;
+        // 校验挂单的 proof，根据用户签名的挂单的根哈希，以及挂单的哈希
         validListing = MerkleProof.verify(exchange.proof, order.listingsRoot, hashListing(listing));
+        // 校验挂单的 tokenId 和 amount
         Taker memory taker = exchange.taker;
-        if (orderType == OrderType.ASK) {
-            if (order.assetType == AssetType.ERC721) {
+        if (orderType == OrderType.ASK) { // 如果是卖单
+            if (order.assetType == AssetType.ERC721) { // 如果是 ERC721，amount 必须为 1
                 validListing = validListing && taker.amount == 1 && listing.amount == 1;
             }
             validListing = validListing && listing.tokenId == taker.tokenId;
-        } else {
-            if (order.assetType == AssetType.ERC721) {
+        } else { // 如果是买单
+            if (order.assetType == AssetType.ERC721) { // 如果是 ERC721，amount 必须为 1
                 validListing = validListing && taker.amount == 1;
             } else {
                 validListing = validListing && listing.tokenId == taker.tokenId;
@@ -156,7 +158,7 @@ abstract contract Validation is IValidation, Signatures {
     }
 
     /**
-     * @notice Validate both the listing and it's parent order (only for single executions)
+     * @notice Validate both the listing and it's parent order (only for single executions) // 校验挂单和对应的订单
      * @param order Order of the listing
      * @param orderType Order type
      * @param exchange Exchange containing the listing
@@ -174,10 +176,10 @@ abstract contract Validation is IValidation, Signatures {
         Listing memory listing = exchange.listing;
         uint256 listingIndex = listing.index;
         return
-            _validateOrder(order, orderType, signature, fees, 0) &&
-            _validateListing(order, orderType, exchange) &&
+            _validateOrder(order, orderType, signature, fees, 0) && // 校验订单的签名，过期与否，手续费总和是否超过 _BASIS_POINTS 10000
+            _validateListing(order, orderType, exchange) && // 校验挂单的 proof，tokenId 和 amount
             amountTaken[order.trader][bytes32(order.salt)][listingIndex] + exchange.taker.amount <=
-            listing.amount;
+            listing.amount; // 当前订单中的 amount 要超过取消过的挂单的 amount
     }
 
     uint256[49] private __gap;

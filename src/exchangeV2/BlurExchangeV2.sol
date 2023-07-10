@@ -34,7 +34,7 @@ contract BlurExchangeV2 is
     ReentrancyGuardUpgradeable,
     Executor
 {
-    address public governor;
+    address public governor; // Address that can set the protocol fee and recipient
 
     // required by the OZ UUPS module
     function _authorizeUpgrade(address) internal override onlyOwner {}
@@ -80,7 +80,7 @@ contract BlurExchangeV2 is
     }
 
     /**
-     * @notice Admin only function to grant or revoke the approval of an oracle
+     * @notice Admin only function to grant or revoke the approval of an oracle 
      * @param oracle Address to set approval of
      * @param approved If the oracle should be approved or not
      */
@@ -263,7 +263,7 @@ contract BlurExchangeV2 is
             revert InvalidOrder();
         }
 
-        /* Create single execution batch and insert the transfer. */
+        /* Create single execution batch and insert the transfer. // 创建单个执行批次 的 calldata*/
         bytes memory executionBatch = _initializeSingleExecution(
             order,
             OrderType.ASK,
@@ -272,12 +272,12 @@ contract BlurExchangeV2 is
             tokenRecipient
         );
 
-        /* Set the fulfillment of the order. */
+        /* Set the fulfillment of the order. // 标记订单已经完成 */
         unchecked {
             amountTaken[order.trader][bytes32(order.salt)][listing.index] += takerAmount;
         }
 
-        /* Execute the token transfers, revert if not successful. */
+        /* Execute the token transfers, revert if not successful. 执行转移，执行失败不会 revert 而是会返回结果 */
         {
             bool[] memory successfulTransfers = _executeNonfungibleTransfers(executionBatch, 1);
             if (!successfulTransfers[0]) {
@@ -285,6 +285,7 @@ contract BlurExchangeV2 is
             }
         }
 
+        // 计算费用
         (
             uint256 totalPrice,
             uint256 protocolFeeAmount,
@@ -292,23 +293,23 @@ contract BlurExchangeV2 is
             uint256 takerFeeAmount
         ) = _computeFees(listing.price, takerAmount, order.makerFee, fees);
 
-        /* If there are insufficient funds to cover the price with the fees, revert. */
+        /* If there are insufficient funds to cover the price with the fees, revert.  资产不够的情况下 revert*/
         unchecked {
             if (address(this).balance < totalPrice + takerFeeAmount) {
                 revert InsufficientFunds();
             }
         }
 
-        /* Execute ETH transfers. */
+        /* Execute ETH transfers. 转移ETH */
         _transferETH(fees.protocolFee.recipient, protocolFeeAmount);
         _transferETH(fees.takerFee.recipient, takerFeeAmount);
         _transferETH(order.makerFee.recipient, makerFeeAmount);
         unchecked {
             _transferETH(order.trader, totalPrice - makerFeeAmount - protocolFeeAmount);
         }
-
+        // 记录事件
         _emitExecutionEvent(executionBatch, order, listing.index, totalPrice, fees, OrderType.ASK);
-        /* Return dust. */
+        /* Return dust. 返回剩余资产*/
         _transferETH(msg.sender, address(this).balance);
     }
 
@@ -334,7 +335,7 @@ contract BlurExchangeV2 is
             revert InvalidOrder();
         }
 
-        /* Create single execution batch and insert the transfer. */
+        /* Create single execution batch and insert the transfer. 创建执行队列的calldata*/
         bytes memory executionBatch = _initializeSingleExecution(
             order,
             OrderType.BID,
@@ -391,7 +392,7 @@ contract BlurExchangeV2 is
 
         /**
          * Validate all the orders potentially used in the execution and
-         * initialize the arrays for pending fulfillments.
+         * initialize the arrays for pending fulfillments. 验证所有的订单，初始化待执行的数组
          */
         (bool[] memory validOrders, uint256[][] memory pendingAmountTaken) = _validateOrders(
             orders,
@@ -402,7 +403,7 @@ contract BlurExchangeV2 is
 
         uint256 exchangesLength = exchanges.length;
 
-        /* Initialize the execution batch structs. */
+        /* Initialize the execution batch structs. 初始化执行队列结构体 */
         (
             bytes memory executionBatch,
             FungibleTransfers memory fungibleTransfers
@@ -416,7 +417,7 @@ contract BlurExchangeV2 is
             exchange = exchanges[i];
             order = orders[exchange.index];
 
-            /* Check the listing and exchange is valid and its parent order has already been validated. */
+            /* Check the listing and exchange is valid and its parent order has already been validated. 校验挂单和交易是有效的*/
             if (
                 _validateListingFromBatch(
                     order,
@@ -426,7 +427,7 @@ contract BlurExchangeV2 is
                     pendingAmountTaken
                 )
             ) {
-                /* Insert the transfers into the batch. */
+                /* Insert the transfers into the batch. 将转移加入 batch 中*/
                 bool inserted;
                 (remainingETH, inserted) = _insertExecutionAsk(
                     executionBatch,
@@ -552,11 +553,11 @@ contract BlurExchangeV2 is
         uint256 executionBatchLength = ExecutionBatch_base_size + arrayLength;
         executionBatch = new bytes(executionBatchLength);
         assembly {
-            let calldataPointer := add(executionBatch, ExecutionBatch_calldata_offset)
-            mstore(add(calldataPointer, ExecutionBatch_taker_offset), taker)
-            mstore(add(calldataPointer, ExecutionBatch_orderType_offset), orderType)
-            mstore(add(calldataPointer, ExecutionBatch_transfers_pointer_offset), ExecutionBatch_transfers_offset) // set the transfers pointer
-            mstore(add(calldataPointer, ExecutionBatch_transfers_offset), exchangesLength) // set the length of the transfers array
+            let calldataPointer := add(executionBatch, ExecutionBatch_calldata_offset) // 设置 calldata 的指针
+            mstore(add(calldataPointer, ExecutionBatch_taker_offset), taker) // 设置 taker
+            mstore(add(calldataPointer, ExecutionBatch_orderType_offset), orderType) // 设置 order type
+            mstore(add(calldataPointer, ExecutionBatch_transfers_pointer_offset),  ExecutionBatch_transfers_offset) // set the transfers pointer 设置 transfers 的指针
+            mstore(add(calldataPointer, ExecutionBatch_transfers_offset), exchangesLength) // set the length of the transfers array 设置 transfers 数组的长度
         }
 
         /* Initialize the fungible transfers object. */
@@ -598,15 +599,16 @@ contract BlurExchangeV2 is
         uint256 arrayLength = Transfer_size + One_word;
         uint256 executionBatchLength = ExecutionBatch_base_size + arrayLength;
         executionBatch = new bytes(executionBatchLength);
+        // 构建calldata
         assembly {
-            let calldataPointer := add(executionBatch, ExecutionBatch_calldata_offset)
-            mstore(add(calldataPointer, ExecutionBatch_taker_offset), taker)
-            mstore(add(calldataPointer, ExecutionBatch_orderType_offset), orderType)
-            mstore(add(calldataPointer, ExecutionBatch_transfers_pointer_offset), ExecutionBatch_transfers_offset) // set the transfers pointer
-            mstore(add(calldataPointer, ExecutionBatch_transfers_offset), 1) // set the length of the transfers array
+            let calldataPointer := add(executionBatch, ExecutionBatch_calldata_offset) // 设置 calldata 的指针
+            mstore(add(calldataPointer, ExecutionBatch_taker_offset), taker) // 设置 taker
+            mstore(add(calldataPointer, ExecutionBatch_orderType_offset), orderType) // 设置 order type
+            mstore(add(calldataPointer, ExecutionBatch_transfers_pointer_offset), ExecutionBatch_transfers_offset) // set the transfers pointer 设置 transfers 的指针
+            mstore(add(calldataPointer, ExecutionBatch_transfers_offset), 1) // set the length of the transfers array 设置 transfers 数组的长度
         }
 
-        /* Insert the transfer into the batch. */
+        /* Insert the transfer into the batch. //  添加 transfer 数据到 executionBatch 数据中 */
         _insertNonfungibleTransfer(executionBatch, order, tokenId, amount);
     }
 }

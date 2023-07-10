@@ -158,31 +158,31 @@ abstract contract Executor is IExecutor, Validation {
         uint256 amount
     ) internal pure returns (uint256 transferIndex) {
         assembly {
-            let calldataPointer := add(executionBatch, ExecutionBatch_calldata_offset)
-            transferIndex := mload(add(calldataPointer, ExecutionBatch_length_offset))
+            let calldataPointer := add(executionBatch, ExecutionBatch_calldata_offset) // 计算 calldata 的指针
+            transferIndex := mload(add(calldataPointer, ExecutionBatch_length_offset)) // 获取当前 batch 的长度作为 transferIndex
 
-            let transfersOffset := mload(add(calldataPointer, ExecutionBatch_transfers_pointer_offset))
+            let transfersOffset := mload(add(calldataPointer, ExecutionBatch_transfers_pointer_offset)) // 获取 transfers 的偏移量
             let transferPointer := add(
                 add(calldataPointer, add(transfersOffset, One_word)),
                 mul(transferIndex, Transfer_size)
-            )
+            ) // 计算 transfer 的指针
             mstore(
                 add(transferPointer, Transfer_trader_offset),
                 mload(add(order, Order_trader_offset))
-            ) // set the trader
-            mstore(add(transferPointer, Transfer_id_offset), tokenId) // set the token id
+            ) // set the trader 设置 trader 为 order 的 trader
+            mstore(add(transferPointer, Transfer_id_offset), tokenId) // set the token id 设置 token id
             mstore(
                 add(transferPointer, Transfer_collection_offset),
                 mload(add(order, Order_collection_offset))
-            ) // set the collection
+            ) // set the collection 设置 collection
             mstore(
                 add(transferPointer, Transfer_assetType_offset),
                 mload(add(order, Order_assetType_offset))
-            ) // set the asset type
-            mstore(add(calldataPointer, ExecutionBatch_length_offset), add(transferIndex, 1)) // increment the batch length
+            ) // set the asset type 设置 asset type
+            mstore(add(calldataPointer, ExecutionBatch_length_offset), add(transferIndex, 1)) // increment the batch length 增加 batch 的长度
 
-            if eq(mload(add(order, Order_assetType_offset)), AssetType_ERC1155) {
-                mstore(add(transferPointer, Transfer_amount_offset), amount) // set the amount (don't need to set for ERC721's)
+            if eq(mload(add(order, Order_assetType_offset)), AssetType_ERC1155) { // 如果是 ERC1155
+                mstore(add(transferPointer, Transfer_amount_offset), amount) // set the amount (don't need to set for ERC721's) 设置 amount
             }
         }
     }

@@ -12,7 +12,7 @@
 <!-- 0 -->
 <g id="node1" class="node">
 <title>0</title>
-<polygon fill="#f2f2f2" stroke="black" points="1175.75,-0.5 1175.75,-511.7 2027.58,-511.7 2027.58,-0.5 1175.75,-0.5"/>
+<polygon fill="#f2f2f2" stroke="red" points="1175.75,-0.5 1175.75,-511.7 2027.58,-511.7 2027.58,-0.5 1175.75,-0.5"/>
 <text text-anchor="middle" x="1601.66" y="-495.1" font-family="Times,serif" font-size="14.00">BlurExchangeV2</text>
 <text text-anchor="middle" x="1601.66" y="-478.3" font-family="Times,serif" font-size="14.00">src/exchangeV2/BlurExchangeV2.sol</text>
 <polyline fill="none" stroke="black" points="1175.75,-470.1 2027.58,-470.1 "/>
@@ -48,7 +48,7 @@
 <!-- 3 -->
 <g id="node4" class="node">
 <title>3</title>
-<polygon fill="#f2f2f2" stroke="black" points="2934.9,-548.7 2934.9,-1093.5 4456.42,-1093.5 4456.42,-548.7 2934.9,-548.7"/>
+<polygon fill="#f2f2f2" stroke="red" points="2934.9,-548.7 2934.9,-1093.5 4456.42,-1093.5 4456.42,-548.7 2934.9,-548.7"/>
 <text text-anchor="middle" x="3695.66" y="-1076.9" font-family="Times,serif" font-size="14.00">&lt;&lt;Abstract&gt;&gt;</text>
 <text text-anchor="middle" x="3695.66" y="-1060.1" font-family="Times,serif" font-size="14.00">Executor</text>
 <text text-anchor="middle" x="3695.66" y="-1043.3" font-family="Times,serif" font-size="14.00">src/exchangeV2/Executor.sol</text>
@@ -558,7 +558,7 @@
 <!-- 5 -->
 <g id="node6" class="node">
 <title>5</title>
-<polygon fill="#f2f2f2" stroke="black" points="1935.38,-1130.5 1935.38,-1524.1 2887.94,-1524.1 2887.94,-1130.5 1935.38,-1130.5"/>
+<polygon fill="#f2f2f2" stroke="red" points="1935.38,-1130.5 1935.38,-1524.1 2887.94,-1524.1 2887.94,-1130.5 1935.38,-1130.5"/>
 <text text-anchor="middle" x="2411.66" y="-1507.5" font-family="Times,serif" font-size="14.00">&lt;&lt;Abstract&gt;&gt;</text>
 <text text-anchor="middle" x="2411.66" y="-1490.7" font-family="Times,serif" font-size="14.00">Validation</text>
 <text text-anchor="middle" x="2411.66" y="-1473.9" font-family="Times,serif" font-size="14.00">src/exchangeV2/Validation.sol</text>
@@ -704,7 +704,7 @@
 <!-- 4 -->
 <g id="node5" class="node">
 <title>4</title>
-<polygon fill="#f2f2f2" stroke="black" points="1615.36,-1561.1 1615.36,-2173.1 2305.96,-2173.1 2305.96,-1561.1 1615.36,-1561.1"/>
+<polygon fill="#f2f2f2" stroke="red" points="1615.36,-1561.1 1615.36,-2173.1 2305.96,-2173.1 2305.96,-1561.1 1615.36,-1561.1"/>
 <text text-anchor="middle" x="1960.66" y="-2156.5" font-family="Times,serif" font-size="14.00">&lt;&lt;Abstract&gt;&gt;</text>
 <text text-anchor="middle" x="1960.66" y="-2139.7" font-family="Times,serif" font-size="14.00">Signatures</text>
 <text text-anchor="middle" x="1960.66" y="-2122.9" font-family="Times,serif" font-size="14.00">src/exchangeV2/Signatures.sol</text>
